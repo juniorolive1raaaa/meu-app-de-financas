@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>FINANÇAS</title>
+  
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <link rel="apple-touch-icon" href="icons/icon-192.png">
+
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#080808">
+  <link rel="stylesheet" href="style.css">
+  
+  <script src="https://d3js.org/d3.v7.min.js"></script>
+</head>
+<body>
+  <div class="app">
+    <header class="topbar">
+      <button id="btnOpenSettings">⚙️</button>
+      <div class="title">FINANÇAS</div>
+    </header>
+
+    <main>
+      <section class="card">
+        <h2>Registrar</h2>
+
+        <div class="row">
+          <label>Data</label>
+          <input id="inputDate" type="date">
+        </div>
+
+        <div class="row">
+          <label>Tipo</label>
+          <select id="inputTipo">
+            <option value="entrada">Entrada</option>
+            <option value="saida">Saída</option>
+          </select>
+        </div>
+
+        <div class="row">
+          <label>Categoria</label>
+          <select id="inputCategoria">
+            </select>
+        </div>
+
+        <div class="row">
+          <label>Valor (R$)</label>
+          <input id="inputValor" type="number" step="0.01" placeholder="0.00" autocomplete="off">
+        </div>
+
+        <div class="row">
+          <label>Descrição</label>
+          <input id="inputDesc" type="text" placeholder="Ex: Salário, Gasolina" autocomplete="off">
+        </div>
+
+        <div class="row actions-row">
+          <button id="btnAdd" class="btn primary">Salvar</button>
+          <button id="btnUndo" class="btn ghost">Desfazer</button>
+        </div>
+      </section>
+
+      <section class="card">
+        <h3>Visão por data</h3>
+        <div class="muted small">Mostrando lançamentos da data selecionada</div>
+        <div id="listDay" class="list"></div>
+      </section>
+
+      <section class="card">
+        <h3>Resumo do mês</h3>
+        <div id="monthSummary" class="statgrid"></div>
+        <div class="row actions-row">
+          <button id="btnOpenReport" class="btn ghost">Ver relatório completo</button>
+          <button id="btnCloseMonth" class="btn ghost">Fechar mês</button>
+        </div>
+      </section>
+    </main>
+
+    <nav class="bottombar">
+      <button id="tabHome" class="tab active">Registrar</button>
+      <button id="tabReport" class="tab">Relatório</button>
+      <button id="tabHistory" class="tab">Histórico</button>
+    </nav>
+  </div>
+
+  <div id="toast" class="toast" style="display:none"></div>
+
+  <div id="screenSettings" class="screen" style="display:none">
+    <div class="screenInner" style="max-width: 400px; height: auto;">
+      <header class="screenHeader">
+        <h2>Configurações</h2>
+        <div class="actions"><button id="btnBackSettings" class="btn primary">Voltar</button></div>
+      </header>
+
+      <section class="card">
+        <h3>Saldo Inicial</h3>
+        <div class="row"><label>Valor (R$)</label><input id="inputInitialBalance" type="number" step="0.01"></div>
+        <div class="row actions-row"><button id="btnSaveInitialBalance" class="btn primary">Salvar</button></div>
+      </section>
+
+      <section class="card">
+        <h3>Gerenciar Categorias</h3>
+        <div class="row"><input id="inputNewCategory" type="text" placeholder="Nova Categoria"></div>
+        <div class="row actions-row"><button id="btnAddCategory" class="btn primary">Adicionar</button></div>
+        <div style="margin-top:15px" class="small muted">Categorias existentes (toque para apagar):</div>
+        <div id="categoryList" class="list" style="display:flex; flex-wrap:wrap; gap:8px; margin-top:5px;"></div>
+      </section>
+    </div>
+  </div>
+
+  <div id="screenReport" class="screen" style="display:none">
+    <div class="screenInner">
+      <header class="screenHeader">
+        <h2 id="reportTitle">Relatório</h2>
+        <div class="actions">
+          <button id="btnExportPdf" class="btn ghost">PDF</button>
+          <button id="btnBackReport" class="btn primary">Voltar</button>
+        </div>
+      </header>
+
+      <section class="card">
+        <h3>Gastos por Categoria (Gráfico)</h3>
+        <div id="chartContainer">
+            <div id="donutChart" style="width: 100%; max-width: 300px; height: 300px;"></div>
+            <div id="chartLegend" class="small muted" style="margin-top: 15px; width:100%"></div>
+        </div>
+      </section>
+
+      <div class="card"><div id="reportSummary"></div></div>
+      <div class="card"><h3>Semanas</h3><div id="reportWeeks"></div></div>
+      <div class="card"><h3>Diário</h3><div id="reportDays"></div></div>
+    </div>
+  </div>
+
+  <div id="screenHistory" class="screen" style="display:none">
+    <div class="screenInner">
+      <header class="screenHeader">
+        <h2>Histórico</h2>
+        <div class="actions"><button id="btnBackHistory" class="btn primary">Voltar</button></div>
+      </header>
+      <div class="card">
+        <h3>Transações do Mês</h3>
+        <div id="transactionsList" class="list"><div class="small muted">Vazio</div></div>
+      </div>
+      <div class="card"><h3>Arquivos</h3><div id="archivesList"></div></div>
+    </div>
+  </div>
+
+  <div id="screenInitialBalanceWarning" class="screen" style="display:none">
+    <div class="screenInner" style="max-width:300px; height:auto; text-align:center">
+      <h3>Aviso</h3>
+      <p>Defina o saldo inicial deste mês para o cálculo correto.</p>
+      <button id="btnConfigInitialBalanceNow" class="btn primary">Agora</button>
+      <button id="btnConfigInitialBalanceLater" class="btn ghost" style="margin-top:8px">Depois</button>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
